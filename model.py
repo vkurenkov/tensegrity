@@ -17,36 +17,9 @@ def quaternion_multiply(quaternion1, quaternion0):
 
 class TensegrityRobot:
     def __init__(self):
-        self._rods   = OrderedDict()
-        self._cables = OrderedDict()
+        self._rods   = []
+        self._cables = []
 
-    # Controller
-    def add_rods(self, rods):
-        for rod in rods:
-            if id(rod) in self._rods:
-                raise Exception("One of the rods is already in the robot.")
-            else:
-                self._rods[id(rod)] = rod
-    def add_cables(self, cables):
-        for cable in cables:
-            end_point0 = cable.get_endpoint(0)
-            end_point1 = cable.get_endpoint(1)
-            cable_id   = frozenset([id(end_point0), id(end_point1)])
-            if cable_id in self._cables:
-                raise Exception("Cable with such endpoints is already presented. (Note that the order of endpoints does not matter)")
-
-            rod1 = end_point0.get_rod()
-            rod2 = end_point1.get_rod()
-            if id(rod1) not in self._rods or id(rod2) not in self._rods:
-                raise Exception("Cable connects one or more unknown rods.")
-
-            # In order to keep the topology of robot correct
-            # We assign cables to endpoints here
-            # Thus all links are correct only after everything was added to the objects of this class
-            end_point0._cabels.append(cable)
-            end_point1._cabels.append(cable)
-            self._cables[cable_id] = cable
-                
     def update(self, dt=0.1):
         """
         Updates all rods.
@@ -54,11 +27,14 @@ class TensegrityRobot:
         for rod in self.get_rods():
             rod.update(dt=dt)
 
-    # Getters
+    def add_rods(self, rods):
+        self._rods.extend(rods)
+    def add_cables(self, cables):
+        self._cables.extend(cables)
     def get_rods(self):
-        return self._rods.values()
+        return self._rods
     def get_cables(self):
-        return self._cables.values()
+        return self._cables
 
 class RodState:
     def __init__(self, q=Rotation.from_rotvec(np.zeros(3,)), r=np.zeros(3,), w=np.zeros(3,), dr=np.zeros(3,)):
@@ -178,6 +154,9 @@ class EndPoint:
         self._holder              = holder
         self._cabels: List[Cable] = []
 
+    def add_cable(self, cable):
+        self._cabels.append(cable)
+
     # Topological properties
     def get_cables(self):
         return copy(self._cabels)
@@ -224,6 +203,9 @@ class Cable:
         self._end_points         = [end_point1, end_point2]
         self._stiffness          = stiffness
         self._unstretched_length = unstretched_length
+
+        end_point1.add_cable(self)
+        end_point2.add_cable(self)
 
     # Topological properties
     def get_endpoint(self, ind=0):
