@@ -6,15 +6,6 @@ from dataclasses             import dataclass
 from copy                    import copy
 from collections             import OrderedDict
 
-def quaternion_multiply(quaternion1, quaternion0):
-    x0, y0, z0, w0 = quaternion0.flatten()
-    x1, y1, z1, w1 = quaternion1.flatten()
-    return np.array([x1 * w0 + y1 * z0 - z1 * y0 + w1 * x0,
-                     -x1 * z0 + y1 * w0 + z1 * x0 + w1 * y0,
-                     x1 * y0 - y1 * x0 + z1 * w0 + w1 * z0,
-                     -x1 * x0 - y1 * y0 - z1 * z0 + w1 * w0], dtype=np.float64)
-
-
 class TensegrityRobot:
     def __init__(self):
         self._rods   = []
@@ -97,7 +88,7 @@ class Rod:
         torque        = np.zeros(3,)
         for (cable, src_pos, direction) in cable_vectors:
             l   = np.linalg.norm(direction) - cable.get_unstretched_length()
-            f   = cable.get_stiffness() * l * direction
+            f   = cable.get_stiffness() * l * (direction / np.linalg.norm(direction))
             tau = np.cross(src_pos, f)
 
             force  += f
@@ -135,18 +126,13 @@ class Rod:
         state.w  = state.w + dw*dt
 
         # Calculate new orientation
-        v = state.w * dt + 0.5*dw*np.power(dt, 2)
+        v      = state.w * dt + 0.5*dw*np.power(dt, 2)
         angle  = np.linalg.norm(v)
-        if angle == 0.0:
-            angle = 1
-        axis   = v / angle
+        if not np.isclose(angle, 0.0):
+            axis    = v / angle
+            ro      = Rotation.from_rotvec(axis * angle)
+            state.q = ro * (state.q * ro.inv())
 
-        cur_ro     = state.q.as_quat()
-        new_ro     = Rotation.from_rotvec(axis * angle)
-        new_ro_inv = new_ro.inv().as_quat()
-        new_ro     = new_ro.as_quat()
-
-        state.q = Rotation.from_quat(quaternion_multiply(new_ro, quaternion_multiply(cur_ro, new_ro_inv)))
         return state
 
 class EndPoint:
