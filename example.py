@@ -1,7 +1,7 @@
-import numpy as np
+import numpy         as np
+import visualisation as rob_vis
 
 from model         import Rod, RodState, Cable, TensegrityRobot
-from visualisation import TensegrityRobotVisualiser
 from copy          import deepcopy
 
 # Let's construct a robot of two rods and one cable
@@ -18,22 +18,6 @@ print(rod1.get_cables_vectors())
 print("Second rod cables vectors")
 print(rod2.get_cables_vectors())
 
-visualiser = TensegrityRobotVisualiser()
 # Visualise the initial state of the robot
-visualiser.plot_cur_state(robot)
-
-# Collect data to visualise the historical data
-n           = 0
-hist_states = []
-while n < 1000:
-    # Update the robot
-    robot.update(dt=0.001)
-
-    # Collect updated data
-    rod_states = [deepcopy(rod.get_state()) for rod in robot.get_rods()]
-    hist_states.append(rod_states)
-
-    n += 1
-
-visualiser.animate_historical_states(robot, states=hist_states, interval=0.001)
+rob_vis.plot(robot)
 
