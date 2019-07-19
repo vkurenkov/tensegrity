@@ -197,9 +197,6 @@ class EndPoint:
 
 class Cable:
     def __init__(self, end_point1, end_point2, stiffness, unstretched_length):
-        if end_point1.get_rod() is end_point2.get_rod():
-            raise Exception("End points must be on different rods.")
-
         self._end_points         = [end_point1, end_point2]
         self._stiffness          = stiffness
         self._unstretched_length = unstretched_length
