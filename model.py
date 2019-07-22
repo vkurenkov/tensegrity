@@ -3,7 +3,7 @@ import numpy as np
 from typing                  import List, Tuple, Iterable
 from scipy.spatial.transform import Rotation
 from dataclasses             import dataclass
-from copy                    import copy
+from copy                    import copy, deepcopy
 from collections             import OrderedDict
 
 class TensegrityRobot:
@@ -15,8 +15,12 @@ class TensegrityRobot:
         """
         Updates all rods.
         """
+        states = []
         for rod in self.get_rods():
-            rod.update(dt=dt)
+            states.append(rod.update(dt=dt))
+
+        for state, rod in zip(states, self.get_rods()):
+            rod.set_state(state)
 
     def add_rods(self, rods):
         self._rods.extend(rods)
@@ -88,7 +92,7 @@ class Rod:
         torque        = np.zeros(3,)
         for (cable, src_pos, direction, out_velocity, in_velocity) in cable_vectors:
             l   = np.linalg.norm(direction) - cable.get_unstretched_length()
-            v   = in_velocity - out_velocity
+            v   = out_velocity - in_velocity
             
             f_d = cable.get_viscosity() * v
             f_p = cable.get_stiffness() * l * (direction / np.linalg.norm(direction))
@@ -123,7 +127,7 @@ class Rod:
         Update the state of the rod.
         """
         if state is None:
-            state = self.get_state()
+            state = deepcopy(self.get_state())
 
         ddr, dw  = self.get_dynamics(state)
         state.dr = state.dr + ddr * dt
