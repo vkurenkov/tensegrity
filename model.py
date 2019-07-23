@@ -4,7 +4,24 @@ from typing                  import List, Tuple, Iterable
 from scipy.spatial.transform import Rotation
 from dataclasses             import dataclass
 from copy                    import copy, deepcopy
-from collections             import OrderedDict
+from collections             import defaultdict
+from tqdm                    import tqdm
+
+
+def run_simulation(robot, time, dt=0.0001):
+    n_iterations = int(time / dt)
+    hist_states  = defaultdict(list)
+    for _ in tqdm(range(n_iterations)):
+        # Update the robot
+        robot.update(dt=dt)
+
+        # Collect updated data
+        rod_states = robot.get_state()
+        for key in rod_states.keys():
+            hist_states[key].append(rod_states[key])
+
+    return hist_states
+
 
 class TensegrityRobot:
     def __init__(self):
@@ -21,7 +38,7 @@ class TensegrityRobot:
 
         for state, rod in zip(states, self.get_rods()):
             rod.set_state(state)
-
+      
     def add_rods(self, rods):
         self._rods.extend(rods)
     def add_cables(self, cables):
@@ -30,6 +47,21 @@ class TensegrityRobot:
         return self._rods
     def get_cables(self):
         return self._cables
+    
+    def set_state(self, state):
+        for ind, rod in enumerate(self.get_rods()):
+            rod.get_state().r  = state["Rod{}_CoM".format(ind)]
+            rod.get_state().q  = Rotation.from_quat(state["Rod{}_Rot".format(ind)])
+            rod.get_state().dr = state["Rod{}_dr".format(ind)]
+            rod.get_state().w  = state["Rod{}_w".format(ind)]
+    def get_state(self):
+        state = {}
+        for ind, rod in enumerate(self.get_rods()):
+            state["Rod{}_CoM".format(ind)] = rod.get_state().r
+            state["Rod{}_Rot".format(ind)] = rod.get_state().q.as_quat()
+            state["Rod{}_dr".format(ind)]  = rod.get_state().dr
+            state["Rod{}_w".format(ind)]   = rod.get_state().w
+        return state
 
 class RodState:
     def __init__(self, q=Rotation.from_rotvec(np.zeros(3,)), r=np.zeros(3,), w=np.zeros(3,), dr=np.zeros(3,)):
@@ -87,20 +119,19 @@ class Rod:
         if state is None:
             state = self.get_state()
 
-        cable_vectors = self.get_cables_states(state)
+        cable_states = self.get_cables_states(state)
         force         = np.zeros(3,)
         torque        = np.zeros(3,)
-        for (cable, src_pos, direction, out_velocity, in_velocity) in cable_vectors:
-            l   = np.linalg.norm(direction) - cable.get_unstretched_length()
-            v   = out_velocity - in_velocity
-            
-            f_d = cable.get_viscosity() * v
-            f_p = cable.get_stiffness() * l * (direction / np.linalg.norm(direction))
-            f   = f_d + f_p
-            tau = np.cross(src_pos, f)
+        for (cable, src_pos, cable_vector, self_velocity, other_velocity) in cable_states:
+            l   = np.linalg.norm(cable_vector) - cable.get_unstretched_length()
+            if l > 0:
+                f_d = -cable.get_viscosity() * self_velocity
+                f_p = cable.get_stiffness() * l * (cable_vector / np.linalg.norm(cable_vector))
+                f   = f_d + f_p
+                tau = np.cross(src_pos, f)
 
-            force  += f
-            torque += tau
+                force  += f
+                torque += tau
 
         return force, torque
     def get_dynamics(self, state=None):
