@@ -49,6 +49,9 @@ robot.add_rods([rod1, rod2, rod3, rod4, rod5, rod6])
 robot.add_cables([cab1, cab2, cab3, cab4, cab5, cab6, cab7, cab8, cab9, cab10, cab11, cab12])
 robot.add_cables([cab13, cab14, cab15, cab16, cab17, cab18, cab19, cab20, cab21, cab22, cab23, cab24])
 
-hist_states = run_simulation(robot, time=1, dt=0.001)
-rob_vis.animate_historical_states(robot=robot, states=hist_states, interval=0.001)
+P = cab24.get_potential_energy()
+print(P)
+
+hist_states = run_simulation(robot, time=0.01, dt=0.001)
+#rob_vis.animate_historical_states(robot=robot, states=hist_states, interval=0.001)
 

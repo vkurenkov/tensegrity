@@ -337,3 +337,8 @@ class Cable:
         return self._unstretched_length
     def get_viscosity(self):
         return self._viscosity
+
+    def get_potential_energy(self):
+        d = self._end_points[0].get_position() - self._end_points[1].get_position()
+        P = d.dot(d) * self.get_stiffness()
+        return P
