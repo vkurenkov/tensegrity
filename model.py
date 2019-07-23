@@ -8,7 +8,7 @@ from collections             import defaultdict
 from tqdm                    import tqdm
 
 
-def run_simulation(robot, time, dt=0.0001):
+def run_simulation(robot, time, dt=0.001):
     n_iterations = int(time / dt)
     hist_states  = defaultdict(list)
     for _ in tqdm(range(n_iterations)):
@@ -28,13 +28,13 @@ class TensegrityRobot:
         self._rods   = []
         self._cables = []
 
-    def update(self, dt=0.1):
+    def update(self, dt=0.001):
         """
         Updates all rods.
         """
         states = []
         for rod in self.get_rods():
-            states.append(rod.update(dt=dt))
+            states.append(rod.update_ExplicitEuler(dt=dt))
 
         for state, rod in zip(states, self.get_rods()):
             rod.set_state(state)
@@ -134,6 +134,9 @@ class Rod:
                 torque += tau
 
         return force, torque
+
+
+
     def get_dynamics(self, state=None):
         """
         Returns current dynamics of the system (Newton-Euler)
@@ -144,21 +147,104 @@ class Rod:
         force, torque = self.get_force_torque(state)
         # Linear acceleration
         ddr           = force / self.get_mass()
+
+        #print(np.cross(state.w, self.get_inertia().dot(state.w)))
+
         # Angular acceleration
-        dw = np.linalg.solve(self.get_inertia(), (torque - np.cross(state.w, self.get_inertia() * state.w)))
+        dw = np.linalg.solve(self.get_inertia(), (torque - np.cross(state.w, self.get_inertia().dot(state.w))))
         dw = dw.reshape((3,))
 
         return ddr, dw
 
+    def state2x(self, state):
+        x = np.concatenate((state.r, state.q.as_quat(), state.dr, state.w))
+        return x
+
+    def x2state(self, x):
+        state = RodState(r=x[0:3], q=Rotation.from_quat(x[3:7]), dr=x[7:10], w = x[10:13])
+        return state
+
+    def acc2dx(self, ddr, dw):
+        dx = np.concatenate((ddr, dw))
+        return dx
+
+    def get_quaternion_jacobian(self, q):
+        G = np.array([[-q[1],  q[0],  q[3], q[2]],
+                      [-q[2], -q[3],  q[0], q[1]],
+                      [-q[3],  q[2], -q[1], q[0]]])
+        return G
+
+    def linearize_dynamics(self, state):
+
+        if state is None:
+            state = self.get_state()
+
+        ddr, dw = self.get_dynamics(state)
+        dx = self.acc2dx(ddr, dw)
+
+        x = self.state2x(state)
+        delta = 0.001
+
+        A = np.zeros((6, x.size))
+        b = np.zeros((6, ))
+
+        for i in range(0, x.size):
+            Z = np.zeros((x.size, ))
+            Z[i] = delta
+            temp_state = self.x2state(x+Z)
+
+            ddr, dw = self.get_dynamics(temp_state)
+            temp_dx = self.acc2dx(ddr, dw)
+
+            A[:, i] = dx - temp_dx
+
+        b = dx - A.dot(x)
+
+        G = self.get_quaternion_jacobian(state.q.as_quat())
+        Jq = 0.5 * G.transpose()
+
+        Line1 = np.concatenate((np.eye(3), np.zeros((3, x.size-3)) ), axis=1)
+        Line2 = np.concatenate((np.zeros((4, 3)), Jq, np.zeros((4, x.size-6)) ), axis=1)
+
+        A = np.concatenate((Line1, Line2, A))
+        b = np.concatenate((np.zeros((7)), b))
+
+        return A, b
+
+    def get_kinetic_energy(self, state):
+
+        E = state.dr.dot(state.dr) * self.get_mass() + ...
+        state.w.dot(self.get_inertia().dot(state.w))
+
+        return E
+
     # Physics update
     def set_state(self, state):
         self._state = state
-    def update(self, state=None, dt=0.1):
+
+
+    def update_ExplicitEuler(self, state=None, dt=0.001):
+
+        if state is None:
+            state = deepcopy(self.get_state())
+
+        A, b = self.linearize_dynamics(state)
+        I = np.eye(3+4+3+3)
+
+        x0 = self.state2x(state)
+
+        x1 = np.linalg.pinv(I - A*dt).dot(x0 - b)*dt
+        state = self.x2state(x1)
+
+        return state
+
+    def update_Taylor(self, state=None, dt=0.001):
         """
         Update the state of the rod.
         """
         if state is None:
             state = deepcopy(self.get_state())
+
 
         ddr, dw  = self.get_dynamics(state)
         state.dr = state.dr + ddr * dt
