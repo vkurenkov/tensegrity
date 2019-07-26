@@ -233,8 +233,22 @@ class Rod:
 
         x0 = self.state2x(state)
 
-        x1 = np.linalg.pinv(I - A*dt).dot(x0 - b)*dt
+        # print()
+        # print("old state:")
+        # print("state.r", state.r)
+        # print("state.q.as_quat()", state.q.as_quat())
+        # print("state.dr", state.dr)
+        # print("state.w", state.w)
+
+        x1 = np.linalg.pinv(I - A*dt).dot(x0 + b*dt)
         state = self.x2state(x1)
+
+        # print()
+        # print("new state:")
+        # print("state.r", state.r)
+        # print("state.q.as_quat()", state.q.as_quat())
+        # print("state.dr", state.dr)
+        # print("state.w", state.w)
 
         return state
 
