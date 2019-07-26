@@ -20,6 +20,8 @@ def run_simulation(robot, time, dt=0.001):
         for key in rod_states.keys():
             hist_states[key].append(rod_states[key])
 
+        print("Total energy: ", robot.get_total_energy())
+
     return hist_states
 
 
@@ -27,6 +29,7 @@ class TensegrityRobot:
     def __init__(self):
         self._rods   = []
         self._cables = []
+
 
     def update(self, dt=0.001):
         """
@@ -38,7 +41,22 @@ class TensegrityRobot:
 
         for state, rod in zip(states, self.get_rods()):
             rod.set_state(state)
-      
+
+
+    def get_total_energy(self):
+
+        K = 0
+
+        for rod in self.get_rods():
+            K = K + rod.get_kinetic_energy()
+
+        P = 0
+        for cable in self.get_cables():
+            P = P + cable.get_potential_energy()
+
+        return K + P
+
+
     def add_rods(self, rods):
         self._rods.extend(rods)
     def add_cables(self, cables):
@@ -125,13 +143,19 @@ class Rod:
         for (cable, src_pos, cable_vector, self_velocity, other_velocity) in cable_states:
             l   = np.linalg.norm(cable_vector) - cable.get_unstretched_length()
             if l > 0:
-                f_d = -cable.get_viscosity() * self_velocity
+                #f_d = -cable.get_viscosity() * self_velocity
                 f_p = cable.get_stiffness() * l * (cable_vector / np.linalg.norm(cable_vector))
-                f   = f_d + f_p
+                #f   = f_d + f_p
+                f = f_p
                 tau = np.cross(src_pos, f)
 
                 force  += f
                 torque += tau
+
+        viscosity_v = 100;
+        viscosity_w = 100;
+        force += -self.get_state().dr * viscosity_v;
+        torque += -self.get_state().w * viscosity_w
 
         return force, torque
 
@@ -211,10 +235,11 @@ class Rod:
 
         return A, b
 
-    def get_kinetic_energy(self, state):
+    def get_kinetic_energy(self):
 
-        E = state.dr.dot(state.dr) * self.get_mass() + ...
-        state.w.dot(self.get_inertia().dot(state.w))
+        state = self.get_state()
+
+        E = state.dr.dot(state.dr) * self.get_mass() + state.w.dot(self.get_inertia().dot(state.w))
 
         return E
 
@@ -354,5 +379,5 @@ class Cable:
 
     def get_potential_energy(self):
         d = self._end_points[0].get_position() - self._end_points[1].get_position()
-        P = d.dot(d) * self.get_stiffness()
+        P = (np.linalg.norm(d) - self.get_unstretched_length())**2 * self.get_stiffness()
         return P
