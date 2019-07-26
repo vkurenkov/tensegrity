@@ -37,7 +37,7 @@ class TensegrityRobot:
         """
         states = []
         for rod in self.get_rods():
-            states.append(rod.update_ExplicitEuler(dt=dt))
+            states.append(rod.update_Taylor(dt=dt))
 
         for state, rod in zip(states, self.get_rods()):
             rod.set_state(state)
@@ -152,8 +152,8 @@ class Rod:
                 force  += f
                 torque += tau
 
-        viscosity_v = 100;
-        viscosity_w = 100;
+        viscosity_v = 1000;
+        viscosity_w = 1000;
         force += -self.get_state().dr * viscosity_v;
         torque += -self.get_state().w * viscosity_w
 
