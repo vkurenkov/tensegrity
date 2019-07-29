@@ -62,7 +62,7 @@ def animate_historical_states(robot, states, interval=0.001):
         if ind >= num_hist_states:
             return
         else:
-            print("Current frame: {}".format(ind))
+            #print("Current frame: {}".format(ind))
             data = _generate_one_frame_data(robot=robot, state=_the_same_dict_at(states, ind))
             for (points, line) in zip(data, lines):
                 line.set_data(points[0], points[1])
