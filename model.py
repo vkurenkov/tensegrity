@@ -20,8 +20,6 @@ def run_simulation(robot, time, dt=0.001):
         for key in rod_states.keys():
             hist_states[key].append(rod_states[key])
 
-        print("Total energy: ", robot.get_total_energy())
-
     return hist_states
 
 
@@ -30,32 +28,16 @@ class TensegrityRobot:
         self._rods   = []
         self._cables = []
 
-
     def update(self, dt=0.001):
         """
         Updates all rods.
         """
         states = []
         for rod in self.get_rods():
-            states.append(rod.update_Taylor(dt=dt))
+            states.append(rod.update_taylor(dt=dt))
 
         for state, rod in zip(states, self.get_rods()):
             rod.set_state(state)
-
-
-    def get_total_energy(self):
-
-        K = 0
-
-        for rod in self.get_rods():
-            K = K + rod.get_kinetic_energy()
-
-        P = 0
-        for cable in self.get_cables():
-            P = P + cable.get_potential_energy()
-
-        return K + P
-
 
     def add_rods(self, rods):
         self._rods.extend(rods)
@@ -65,7 +47,17 @@ class TensegrityRobot:
         return self._rods
     def get_cables(self):
         return self._cables
-    
+    def get_total_energy(self):
+        K = 0
+        for rod in self.get_rods():
+            K = K + rod.get_kinetic_energy()
+
+        P = 0
+        for cable in self.get_cables():
+            P = P + cable.get_potential_energy()
+
+        return K + P
+
     def set_state(self, state):
         for ind, rod in enumerate(self.get_rods()):
             rod.get_state().r  = state["Rod{}_CoM".format(ind)]
@@ -93,11 +85,13 @@ class RodState:
         self.dr = dr
 
 class Rod:
-    def __init__(self, mass, length, inertia, state):
+    def __init__(self, mass, length, inertia, state, viscosity_dr=10, viscosity_w=10):
         self._mass       = mass
         self._length     = length
         self._inertia    = inertia
         self._state      = state
+        self._viscosity_dr = viscosity_dr
+        self._viscosity_w  = viscosity_w
         self._endpoint_a = EndPoint(holder=self)
         self._endpoint_b = EndPoint(holder=self)
 
@@ -143,23 +137,17 @@ class Rod:
         for (cable, src_pos, cable_vector, self_velocity, other_velocity) in cable_states:
             l   = np.linalg.norm(cable_vector) - cable.get_unstretched_length()
             if l > 0:
-                #f_d = -cable.get_viscosity() * self_velocity
                 f_p = cable.get_stiffness() * l * (cable_vector / np.linalg.norm(cable_vector))
-                #f   = f_d + f_p
                 f = f_p
                 tau = np.cross(src_pos, f)
 
                 force  += f
                 torque += tau
 
-        viscosity_v = 1000;
-        viscosity_w = 1000;
-        force += -self.get_state().dr * viscosity_v;
-        torque += -self.get_state().w * viscosity_w
+        force += -self.get_state().dr * self._viscosity_dr
+        torque += -self.get_state().w * self._viscosity_w
 
         return force, torque
-
-
 
     def get_dynamics(self, state=None):
         """
@@ -169,10 +157,9 @@ class Rod:
             state = self.get_state()
 
         force, torque = self.get_force_torque(state)
+
         # Linear acceleration
         ddr           = force / self.get_mass()
-
-        #print(np.cross(state.w, self.get_inertia().dot(state.w)))
 
         # Angular acceleration
         dw = np.linalg.solve(self.get_inertia(), (torque - np.cross(state.w, self.get_inertia().dot(state.w))))
@@ -180,15 +167,15 @@ class Rod:
 
         return ddr, dw
 
-    def state2x(self, state):
+    def state_to_x(self, state):
         x = np.concatenate((state.r, state.q.as_quat(), state.dr, state.w))
         return x
 
-    def x2state(self, x):
+    def x_to_state(self, x):
         state = RodState(r=x[0:3], q=Rotation.from_quat(x[3:7]), dr=x[7:10], w = x[10:13])
         return state
 
-    def acc2dx(self, ddr, dw):
+    def acc_to_dx(self, ddr, dw):
         dx = np.concatenate((ddr, dw))
         return dx
 
@@ -199,14 +186,13 @@ class Rod:
         return G
 
     def linearize_dynamics(self, state):
-
         if state is None:
             state = self.get_state()
 
         ddr, dw = self.get_dynamics(state)
-        dx = self.acc2dx(ddr, dw)
+        dx = self.acc_to_dx(ddr, dw)
 
-        x = self.state2x(state)
+        x = self.state_to_x(state)
         delta = 0.001
 
         A = np.zeros((6, x.size))
@@ -215,10 +201,10 @@ class Rod:
         for i in range(0, x.size):
             Z = np.zeros((x.size, ))
             Z[i] = delta
-            temp_state = self.x2state(x+Z)
+            temp_state = self.x_to_state(x+Z)
 
             ddr, dw = self.get_dynamics(temp_state)
-            temp_dx = self.acc2dx(ddr, dw)
+            temp_dx = self.acc_to_dx(ddr, dw)
 
             A[:, i] = dx - temp_dx
 
@@ -236,9 +222,7 @@ class Rod:
         return A, b
 
     def get_kinetic_energy(self):
-
         state = self.get_state()
-
         E = state.dr.dot(state.dr) * self.get_mass() + state.w.dot(self.get_inertia().dot(state.w))
 
         return E
@@ -247,43 +231,21 @@ class Rod:
     def set_state(self, state):
         self._state = state
 
-
-    def update_ExplicitEuler(self, state=None, dt=0.001):
-
+    def update_explicit_euler(self, state=None, dt=0.001):
         if state is None:
             state = deepcopy(self.get_state())
 
         A, b = self.linearize_dynamics(state)
         I = np.eye(3+4+3+3)
-
-        x0 = self.state2x(state)
-
-        # print()
-        # print("old state:")
-        # print("state.r", state.r)
-        # print("state.q.as_quat()", state.q.as_quat())
-        # print("state.dr", state.dr)
-        # print("state.w", state.w)
-
+        x0 = self.state_to_x(state)
         x1 = np.linalg.pinv(I - A*dt).dot(x0 + b*dt)
-        state = self.x2state(x1)
-
-        # print()
-        # print("new state:")
-        # print("state.r", state.r)
-        # print("state.q.as_quat()", state.q.as_quat())
-        # print("state.dr", state.dr)
-        # print("state.w", state.w)
+        state = self.x_to_state(x1)
 
         return state
 
-    def update_Taylor(self, state=None, dt=0.001):
-        """
-        Update the state of the rod.
-        """
+    def update_taylor(self, state=None, dt=0.001):
         if state is None:
             state = deepcopy(self.get_state())
-
 
         ddr, dw  = self.get_dynamics(state)
         state.dr = state.dr + ddr * dt
@@ -376,7 +338,6 @@ class Cable:
         return self._unstretched_length
     def get_viscosity(self):
         return self._viscosity
-
     def get_potential_energy(self):
         d = self._end_points[0].get_position() - self._end_points[1].get_position()
         P = (np.linalg.norm(d) - self.get_unstretched_length())**2 * self.get_stiffness()
