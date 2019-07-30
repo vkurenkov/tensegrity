@@ -85,7 +85,7 @@ class RodState:
         self.dr = dr
 
 class Rod:
-    def __init__(self, mass, length, inertia, state, viscosity_dr=2, viscosity_w=2):
+    def __init__(self, mass, length, inertia, state, viscosity_dr=20, viscosity_w=20):
         self._mass       = mass
         self._length     = length
         self._inertia    = inertia
