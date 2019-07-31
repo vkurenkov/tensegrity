@@ -5,6 +5,15 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 from copy                 import deepcopy
 
+def plot_com_graphs(states):
+    fig, ax = _create_3d_subplot(title="Center of Mass over time")
+    for key in states:
+        property_name = str.lower(key)
+        positions     = np.array(states[key])
+        if "com" in property_name:
+            ax.scatter(xs=positions[:, 0], ys=positions[:, 1], zs=positions[:, 2], label=key)
+    ax.legend()
+    plt.show()
 def plot_cur_state(robot, state=None):
     """
     Plots current state of the robot.
@@ -20,9 +29,7 @@ def plot_cur_state(robot, state=None):
         original_state = _save_states(robot)
 
     # Plot current state
-    fig   = plt.figure()
-    ax    = Axes3D(fig)
-    ax.set_title("Visualisation of the given robot state.")
+    fig, ax = _create_3d_subplot(title="Visualisation of the given robot state.")
 
     lines = _generate_one_frame_data(robot=robot, state=state)
     for (ind, line) in enumerate(lines):
@@ -42,9 +49,7 @@ def animate_historical_states(robot, states, interval=0.001):
     # Release previously allocated figures
     plt.close("all")
 
-    fig        = plt.figure()
-    ax         = Axes3D(fig)
-    ax.set_title("Animation of the provided historical states.")
+    fig, ax = _create_3d_subplot("Animation of the provided historical states.")
 
     lines_data = _generate_one_frame_data(robot=robot, state=_the_same_dict_at(states, 0))
     lines      = []
@@ -71,6 +76,14 @@ def animate_historical_states(robot, states, interval=0.001):
     _ = FuncAnimation(fig, func=update, fargs=([states]), interval=interval)
     plt.show()
 
+def _create_3d_subplot(title):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_title(title)
+    ax.set_xlabel("x", weight="bold")
+    ax.set_ylabel("y", weight="bold")
+    ax.set_zlabel("z", weight="bold")
+    return fig, ax
 def _generate_one_frame_data(robot, state=None):
     # Set up the robot with the given states
     _pass_state(robot, state)
