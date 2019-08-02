@@ -5,6 +5,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 from copy                 import deepcopy
 
+SCALE = 0.2
+
 def plot_com_graphs(states):
     fig, ax = _create_3d_subplot(title="Center of Mass over time")
     for key in states:
@@ -13,6 +15,10 @@ def plot_com_graphs(states):
         if "com" in property_name:
             ax.scatter(xs=positions[:, 0], ys=positions[:, 1], zs=positions[:, 2], label=key)
     ax.legend()
+
+    ax.set_xlim3d(-SCALE, SCALE)
+    ax.set_ylim3d(-SCALE, SCALE)
+    ax.set_zlim3d(-SCALE, SCALE)
     plt.show()
 def plot_cur_state(robot, state=None):
     """
@@ -40,6 +46,10 @@ def plot_cur_state(robot, state=None):
             linewidth = 0.5
 
         ax.plot(xs=line[0], ys=line[1], zs=line[2], c=c, linewidth=linewidth)
+
+    ax.set_xlim3d(-SCALE, SCALE)
+    ax.set_ylim3d(-SCALE, SCALE)
+    ax.set_zlim3d(-SCALE, SCALE)
     plt.show()
 
     # Restore original states
@@ -74,6 +84,9 @@ def animate_historical_states(robot, states, interval=0.001):
                 line.set_3d_properties(points[2])
 
     _ = FuncAnimation(fig, func=update, fargs=([states]), interval=interval)
+    ax.set_xlim3d(-SCALE, SCALE)
+    ax.set_ylim3d(-SCALE, SCALE)
+    ax.set_zlim3d(-SCALE, SCALE)
     plt.show()
 
 def _create_3d_subplot(title):
