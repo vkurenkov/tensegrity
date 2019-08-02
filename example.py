@@ -10,13 +10,14 @@ OFFSET = LENGTH/8.0
 UNSTRETCHED_LENGTH = 0.1
 STIFFNESS = 10
 VISCOSITY = 1
+MASS = 1
 
-rod1  = Rod(mass=1, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([0, 0, -OFFSET]), q=Rotation.from_euler("xyz", [0, 0, 0], degrees=True)))
-rod2  = Rod(mass=1, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([0, 0, OFFSET]),  q=Rotation.from_euler("xyz", [0, 0, 0], degrees=True)))
-rod3  = Rod(mass=1, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([-OFFSET, 0, 0]), q=Rotation.from_euler("xyz", [0, 0, 90], degrees=True)))
-rod4  = Rod(mass=1, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([OFFSET, 0, 0]),  q=Rotation.from_euler("xyz", [0, 0, 90], degrees=True)))
-rod5  = Rod(mass=1, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([0, -OFFSET, 0]), q=Rotation.from_euler("xyz", [0, 90, 0], degrees=True)))
-rod6  = Rod(mass=1, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([0, OFFSET, 0]),  q=Rotation.from_euler("xyz", [0, 90, 0], degrees=True)))
+rod1  = Rod(mass=MASS, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([0, 0, -OFFSET]), q=Rotation.from_euler("xyz", [0, 0, 0], degrees=True)))
+rod2  = Rod(mass=MASS, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([0, 0, OFFSET]),  q=Rotation.from_euler("xyz", [0, 0, 0], degrees=True)))
+rod3  = Rod(mass=MASS, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([-OFFSET, 0, 0]), q=Rotation.from_euler("xyz", [0, 0, 90], degrees=True)))
+rod4  = Rod(mass=MASS, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([OFFSET, 0, 0]),  q=Rotation.from_euler("xyz", [0, 0, 90], degrees=True)))
+rod5  = Rod(mass=MASS, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([0, -OFFSET, 0]), q=Rotation.from_euler("xyz", [0, 90, 0], degrees=True)))
+rod6  = Rod(mass=MASS, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([0, OFFSET, 0]),  q=Rotation.from_euler("xyz", [0, 90, 0], degrees=True)))
 
 cab1  = Cable(end_point1=rod1.get_endpoint_a(), end_point2=rod3.get_endpoint_a(), stiffness=STIFFNESS, unstretched_length=UNSTRETCHED_LENGTH, viscosity=VISCOSITY)
 cab2  = Cable(end_point1=rod1.get_endpoint_a(), end_point2=rod3.get_endpoint_b(), stiffness=STIFFNESS, unstretched_length=UNSTRETCHED_LENGTH, viscosity=VISCOSITY)
@@ -49,5 +50,11 @@ robot.add_rods([rod1, rod2, rod3, rod4, rod5, rod6])
 robot.add_cables([cab1, cab2, cab3, cab4, cab5, cab6, cab7, cab8, cab9, cab10, cab11, cab12])
 robot.add_cables([cab13, cab14, cab15, cab16, cab17, cab18, cab19, cab20, cab21, cab22, cab23, cab24])
 
+
+rob_vis.plot_cur_state(robot)
+
 hist_states = run_simulation(robot, time=5, dt=0.005)
-rob_vis.animate_historical_states(robot=robot, states=hist_states, interval=0.01)
+#rob_vis.animate_historical_states(robot=robot, states=hist_states, interval=0.01)
+
+
+rob_vis.plot_cur_state(robot)

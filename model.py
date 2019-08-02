@@ -7,8 +7,8 @@ from copy                    import copy, deepcopy
 from collections             import defaultdict
 from tqdm                    import tqdm
 
-#gravity = np.array([0, 0, -9.8])
-gravity = np.array([0, 0, 0])
+gravity = np.array([0, 0, -9.8])
+#gravity = np.array([0, 0, 0])
 
 def run_simulation(robot, time, dt=0.001):
     n_iterations = int(time / dt)
