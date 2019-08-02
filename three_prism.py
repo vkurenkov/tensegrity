@@ -34,5 +34,8 @@ robot = TensegrityRobot()
 robot.add_rods([rod1, rod2, rod3])
 robot.add_cables([cab1, cab2, cab3, cab4, cab5, cab6, cab7, cab8, cab9])
 rob_vis.plot_cur_state(robot)
-#hist_states = run_simulation(robot, time=5, dt=0.005)
+hist_states = run_simulation(robot, time=5, dt=0.005)
+
+rob_vis.plot_cur_state(robot)
+
 #rob_vis.animate_historical_states(robot=robot, states=hist_states, interval=0.01)

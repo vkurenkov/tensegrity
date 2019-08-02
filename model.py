@@ -7,6 +7,7 @@ from copy                    import copy, deepcopy
 from collections             import defaultdict
 from tqdm                    import tqdm
 
+gravity = np.array([0, 0, -9.8])
 
 def run_simulation(robot, time, dt=0.001):
     n_iterations = int(time / dt)
@@ -146,6 +147,8 @@ class Rod:
 
         force += -self.get_state().dr * self._viscosity_dr
         torque += -self.get_state().w * self._viscosity_w
+
+        force += gravity * self.get_mass()
 
         return force, torque
 
