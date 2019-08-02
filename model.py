@@ -278,6 +278,11 @@ class EndPoint:
         return copy(self._cabels)
     def get_rod(self):
         return self._holder
+    def get_opposite_endpoint(self):
+        if self.is_a():
+            return self.get_rod().get_endpoint_b()
+        else:
+            return self.get_rod().get_endpoint_a()
     def is_a(self):
         return self.get_rod().get_endpoint_a() is self
 
