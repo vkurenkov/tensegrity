@@ -6,9 +6,8 @@ from dataclasses             import dataclass
 from copy                    import copy, deepcopy
 from collections             import defaultdict
 from tqdm                    import tqdm
+from forces                  import Gravity
 
-#gravity = np.array([0, 0, -9.8])
-gravity = np.array([0, 0, 0])
 
 def run_simulation(robot, time, dt=0.001):
     n_iterations = int(time / dt)
@@ -40,6 +39,9 @@ class TensegrityRobot:
 
         for state, rod in zip(states, self.get_rods()):
             rod.set_state(state)
+    def enable_gravity(self, gravity=np.array([0, 0, -9.8])):
+        for rod in self._rods:
+            rod.add_force_source(Gravity(rod, gravity=gravity))
 
     def add_rods(self, rods):
         self._rods.extend(rods)
@@ -96,6 +98,7 @@ class Rod:
         self._viscosity_w  = viscosity_w
         self._endpoint_a = EndPoint(holder=self)
         self._endpoint_b = EndPoint(holder=self)
+        self._force_sources = [self._endpoint_a, self._endpoint_b]
 
     # Topological properties
     def get_endpoint_a(self):
@@ -117,7 +120,11 @@ class Rod:
         vectors.extend(self.get_endpoint_b().get_cables_states(state))
         return vectors
 
-    # Physical properties
+    # Physicsss
+    def add_force_source(self, force_source):
+        self._force_sources.append(force_source)
+    def get_force_sources(self):
+        return self._force_sources
     def get_mass(self):
         return self._mass
     def get_length(self):
@@ -133,25 +140,18 @@ class Rod:
         if state is None:
             state = self.get_state()
 
-        cable_states = self.get_cables_states(state)
-        force         = np.zeros(3,)
-        torque        = np.zeros(3,)
-        for (cable, src_pos, cable_vector, self_velocity, other_velocity) in cable_states:
-            l   = np.linalg.norm(cable_vector) - cable.get_unstretched_length()
-            if l > 0:
-                f_p = cable.get_stiffness() * l * (cable_vector / np.linalg.norm(cable_vector))
-                f = f_p
-                tau = np.cross(src_pos, f)
+        tot_force  = np.zeros(shape=(3,))
+        tot_torque = np.zeros(shape=(3,))
+        for source in self.get_force_sources():
+            pos, force = source.get_force()
+            tot_force  += force
+            tot_torque += np.cross(pos, force)
 
-                force  += f
-                torque += tau
+        # TODO: Delete me somewhere in the not so distant future...
+        tot_force  += -state.dr * self._viscosity_dr
+        tot_torque += -state.w  * self._viscosity_w
 
-        force += -self.get_state().dr * self._viscosity_dr
-        torque += -self.get_state().w * self._viscosity_w
-
-        force += gravity * self.get_mass()
-
-        return force, torque
+        return tot_force, tot_torque
 
     def get_dynamics(self, state=None):
         """
@@ -302,7 +302,6 @@ class EndPoint:
             state = self.get_rod().get_state()
 
         return state.dr + np.cross(self.get_position(state) - state.r, state.w)
-     
     def get_cables_states(self, state=None):
         """
         Returns all cables for this EndPoint [(origin point, direction)], such that origin point is on this EndPoint.
@@ -323,6 +322,19 @@ class EndPoint:
             vectors.append((cable, src_pos, other_endpoint.get_position() - src_pos, velocity, other_velocity))
 
         return vectors
+
+    # Force source
+    def get_force(self):
+        state = self.get_rod().get_state()
+        cable_states = self.get_cables_states(state)
+        tot_force = np.zeros(shape=(3,))
+        for (cable, src_pos, cable_vector, _, _) in cable_states:
+            l   = np.linalg.norm(cable_vector) - cable.get_unstretched_length()
+            if l > 0:
+                f_p = cable.get_stiffness() * l * (cable_vector / np.linalg.norm(cable_vector))
+                tot_force += f_p
+
+        return src_pos, tot_force
 
 class Cable:
     def __init__(self, end_point1, end_point2, stiffness, unstretched_length, viscosity):
