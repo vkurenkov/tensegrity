@@ -151,6 +151,13 @@ class Rod:
 
         force += gravity * self.get_mass()
 
+        rotor = self.get_endpoint_a().get_rotor()
+        if rotor is not None:
+            force += rotor.get_thrust() * rotor.get_vector()
+        rotor = self.get_endpoint_a().get_rotor()
+        if rotor is not None:
+            force += rotor.get_thrust() * rotor.get_vector()
+
         return force, torque
 
     def get_dynamics(self, state=None):
@@ -171,59 +178,23 @@ class Rod:
 
         return ddr, dw
 
-    def state_to_x(self, state):
-        x = np.concatenate((state.r, state.q.as_quat(), state.dr, state.w))
-        return x
-
-    def x_to_state(self, x):
-        state = RodState(r=x[0:3], q=Rotation.from_quat(x[3:7]), dr=x[7:10], w = x[10:13])
-        return state
-
-    def acc_to_dx(self, ddr, dw):
-        dx = np.concatenate((ddr, dw))
-        return dx
+    # def state_to_x(self, state):
+    #     x = np.concatenate((state.r, state.q.as_quat(), state.dr, state.w))
+    #     return x
+    #
+    # def x_to_state(self, x):
+    #     state = RodState(r=x[0:3], q=Rotation.from_quat(x[3:7]), dr=x[7:10], w = x[10:13])
+    #     return state
+    #
+    # def acc_to_dx(self, ddr, dw):
+    #     dx = np.concatenate((ddr, dw))
+    #     return dx
 
     def get_quaternion_jacobian(self, q):
         G = np.array([[-q[1],  q[0],  q[3], q[2]],
                       [-q[2], -q[3],  q[0], q[1]],
                       [-q[3],  q[2], -q[1], q[0]]])
         return G
-
-    def linearize_dynamics(self, state):
-        if state is None:
-            state = self.get_state()
-
-        ddr, dw = self.get_dynamics(state)
-        dx = self.acc_to_dx(ddr, dw)
-
-        x = self.state_to_x(state)
-        delta = 0.001
-
-        A = np.zeros((6, x.size))
-        b = np.zeros((6, ))
-
-        for i in range(0, x.size):
-            Z = np.zeros((x.size, ))
-            Z[i] = delta
-            temp_state = self.x_to_state(x+Z)
-
-            ddr, dw = self.get_dynamics(temp_state)
-            temp_dx = self.acc_to_dx(ddr, dw)
-
-            A[:, i] = dx - temp_dx
-
-        b = dx - A.dot(x)
-
-        G = self.get_quaternion_jacobian(state.q.as_quat())
-        Jq = 0.5 * G.transpose()
-
-        Line1 = np.concatenate((np.eye(3), np.zeros((3, x.size-3)) ), axis=1)
-        Line2 = np.concatenate((np.zeros((4, 3)), Jq, np.zeros((4, x.size-6)) ), axis=1)
-
-        A = np.concatenate((Line1, Line2, A))
-        b = np.concatenate((np.zeros((7)), b))
-
-        return A, b
 
     def get_kinetic_energy(self):
         state = self.get_state()
@@ -234,18 +205,6 @@ class Rod:
     # Physics update
     def set_state(self, state):
         self._state = state
-
-    def update_explicit_euler(self, state=None, dt=0.001):
-        if state is None:
-            state = deepcopy(self.get_state())
-
-        A, b = self.linearize_dynamics(state)
-        I = np.eye(3+4+3+3)
-        x0 = self.state_to_x(state)
-        x1 = np.linalg.pinv(I - A*dt).dot(x0 + b*dt)
-        state = self.x_to_state(x1)
-
-        return state
 
     def update_taylor(self, state=None, dt=0.001):
         if state is None:
@@ -266,10 +225,23 @@ class Rod:
 
         return state
 
+class Rotor:
+    def __init__(self, holder):
+        self._holder = holder
+        self._thrust = 0
+    def set_thrust(self, thrust):
+        self._thrust = thrust
+    def get_thrust(self):
+        return copy(self._thrust)
+    def get_vector(self):
+        #return np.array([[1], [0], [0]])
+        return np.array([0, 0, 1])
+
 class EndPoint:
     def __init__(self, holder):
         self._holder              = holder
         self._cabels: List[Cable] = []
+        self._rotor               = None
 
     def add_cable(self, cable):
         self._cabels.append(cable)
@@ -323,6 +295,12 @@ class EndPoint:
             vectors.append((cable, src_pos, other_endpoint.get_position() - src_pos, velocity, other_velocity))
 
         return vectors
+
+    def set_rotor(self, rotor=None):
+        self._rotor = rotor
+    def get_rotor(self):
+        return copy(self._rotor)
+
 
 class Cable:
     def __init__(self, end_point1, end_point2, stiffness, unstretched_length, viscosity):
