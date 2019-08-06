@@ -157,18 +157,6 @@ class Rod:
 
         return ddr, dw
 
-    # def state_to_x(self, state):
-    #     x = np.concatenate((state.r, state.q.as_quat(), state.dr, state.w))
-    #     return x
-    #
-    # def x_to_state(self, x):
-    #     state = RodState(r=x[0:3], q=Rotation.from_quat(x[3:7]), dr=x[7:10], w = x[10:13])
-    #     return state
-    #
-    # def acc_to_dx(self, ddr, dw):
-    #     dx = np.concatenate((ddr, dw))
-    #     return dx
-
     def get_quaternion_jacobian(self, q):
         G = np.array([[-q[1],  q[0],  q[3], q[2]],
                       [-q[2], -q[3],  q[0], q[1]],
@@ -238,16 +226,20 @@ class EndPoint:
     def is_a(self):
         return self.get_rod().get_endpoint_a() is self
 
-    def get_position(self, state=None):
+    def get_position_relative_to_CoM(self, state=None):
+        if state is None:
+            state = self.get_rod().get_state()
         # Given position, orientation, and length -- compute the edges positions
         displacement = self.get_rod().get_length() / 2
         if self.is_a():
             displacement *= -1
+        return state.q.apply([displacement, 0, 0])
 
+    def get_position(self, state=None):
         if state is None:
             state = self.get_rod().get_state()
+        return state.r + self.get_position_relative_to_CoM(state)
 
-        return state.r + state.q.apply([displacement, 0, 0])
     def get_velocity(self, state=None):
         if state is None:
             state = self.get_rod().get_state()

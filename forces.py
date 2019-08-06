@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.spatial.transform import Rotation
 
 from copy import copy
 
@@ -8,20 +9,27 @@ class Gravity:
         self._rod     = rod
 
     def get_force(self):
-        return self._rod.get_state().r, self._gravity * self._rod.get_mass()
+        return np.array([0.0, 0.0, 0.0]), self._gravity * self._rod.get_mass()
 
 class Rotor:
-    def __init__(self, EndPoint):
+    def __init__(self, EndPoint, orientation=Rotation.from_euler('zyx', [0, 0, 0])):
         self._EndPoint = EndPoint
         self._thrust = 0
+        self._orientation = orientation
+    def set_orientation(self, orientation):
+        self._orientation = orientation
+    def get_orientation(self):
+        return copy(self._orientation)
     def set_thrust(self, thrust):
         self._thrust = thrust
     def get_thrust(self):
         return copy(self._thrust)
     def get_vector(self):
-        #return np.array([[1], [0], [0]])
-        return np.array([0, 0, 1])
+        r = np.array([-1.0, 0.0, 0.0])
+        r = self._orientation.apply(r)
+        r = self._EndPoint.get_rod().get_state().q.apply(r)
+        return r
     def get_force(self):
         F = self.get_vector() * self.get_thrust()
-        r = self._EndPoint.get_position()
+        r = self._EndPoint.get_position_relative_to_CoM()
         return r, F

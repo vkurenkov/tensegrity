@@ -14,7 +14,7 @@ OFFSET = LENGTH/8.0
 UNSTRETCHED_LENGTH_v = 0.02
 UNSTRETCHED_LENGTH_h1 = 0.03
 UNSTRETCHED_LENGTH_h2 = 0.15
-STIFFNESS = 10
+STIFFNESS = 100
 VISCOSITY = 1
 
 q0=Rotation.from_euler("xyz", [0, 90, 0], degrees=True)
@@ -59,19 +59,10 @@ rod2.add_force_source(rotor2)
 rod3.add_force_source(rotor3)
 rod4.add_force_source(rotor4)
 
-# rod1.get_endpoint_a().set_rotor(rotor1)
-# rod2.get_endpoint_a().set_rotor(rotor2)
-# rod3.get_endpoint_a().set_rotor(rotor3)
-# rod4.get_endpoint_a().set_rotor(rotor4)
-
-rotor1.set_thrust(10)
-rotor2.set_thrust(10)
-rotor3.set_thrust(10)
-rotor4.set_thrust(10)
-
-# print(rotor4.get_thrust())
-# print(rotor4.get_vector())
-# print(rotor4.get_thrust() * rotor4.get_vector())
+rotor1.set_thrust(12)
+rotor2.set_thrust(12)
+rotor3.set_thrust(12)
+rotor4.set_thrust(12)
 
 #######################
 
