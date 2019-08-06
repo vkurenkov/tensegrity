@@ -12,6 +12,7 @@ STIFFNESS = 10
 VISCOSITY = 1
 MASS = 1
 
+
 rod1  = Rod(mass=MASS, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([0, 0, -OFFSET]), q=Rotation.from_euler("xyz", [0, 0, 0], degrees=True)))
 rod2  = Rod(mass=MASS, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([0, 0, OFFSET]),  q=Rotation.from_euler("xyz", [0, 0, 0], degrees=True)))
 rod3  = Rod(mass=MASS, inertia=np.eye(3), length=LENGTH, state=RodState(r=np.array([-OFFSET, 0, 0]), q=Rotation.from_euler("xyz", [0, 0, 90], degrees=True)))
