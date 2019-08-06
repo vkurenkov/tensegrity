@@ -1,29 +1,13 @@
 import numpy as np
 
+
 from typing                  import List, Tuple, Iterable
 from scipy.spatial.transform import Rotation
 from dataclasses             import dataclass
 from copy                    import copy, deepcopy
-from collections             import defaultdict
-from tqdm                    import tqdm
 
 gravity = np.array([0, 0, -9.8])
 #gravity = np.array([0, 0, 0])
-
-def run_simulation(robot, time, dt=0.001):
-    n_iterations = int(time / dt)
-    hist_states  = defaultdict(list)
-    for _ in tqdm(range(n_iterations)):
-        # Update the robot
-        robot.update(dt=dt)
-
-        # Collect updated data
-        rod_states = robot.get_state()
-        for key in rod_states.keys():
-            hist_states[key].append(rod_states[key])
-
-    return hist_states
-
 
 class TensegrityRobot:
     def __init__(self):

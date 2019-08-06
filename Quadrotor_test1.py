@@ -2,7 +2,9 @@ import numpy         as np
 from math import cos, sin, pi
 import visualisation as rob_vis
 
-from model                   import Rod, RodState, Cable, TensegrityRobot, run_simulation, Rotor
+from model                   import Rod, RodState, Cable, TensegrityRobot, Rotor
+from simulation              import run_simulation
+
 from copy                    import deepcopy
 from scipy.spatial.transform import Rotation
 
@@ -71,12 +73,13 @@ robot = TensegrityRobot()
 robot.add_rods([rod1, rod2, rod3, rod4])
 robot.add_cables([cab1, cab2, cab3, cab4, cab5, cab6, cab7, cab8, cab9, cab10, cab11, cab12])
 
+rotors = [rotor1, rotor2, rotor3, rotor4]
 
-
+#rob_vis.plot_cur_state(robot)
+hist_states = run_simulation(robot, rotors, time=0.005, dt=0.005)
 rob_vis.plot_cur_state(robot)
-hist_states = run_simulation(robot, time=3, dt=0.005)
-rob_vis.plot_cur_state(robot)
 
-rob_vis.plot_com_graphs(hist_states)
+#rob_vis.plot_com_graphs(hist_states)
 #rob_vis.animate_historical_states(robot=robot, states=hist_states, interval=0.01)
 
+#print(hist_states)
