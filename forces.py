@@ -6,4 +6,4 @@ class Gravity:
         self._rod     = rod
 
     def get_force(self):
-        return self._gravity, self._gravity * self._rod.get_mass()
+        return self._rod.get_state().r, self._gravity * self._rod.get_mass()
