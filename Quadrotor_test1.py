@@ -2,7 +2,8 @@ import numpy         as np
 from math import cos, sin, pi
 import visualisation as rob_vis
 
-from model                   import Rod, RodState, Cable, TensegrityRobot, Rotor
+from model                   import Rod, RodState, Cable, TensegrityRobot
+from forces                  import Rotor
 from simulation              import run_simulation
 
 from copy                    import deepcopy
@@ -53,10 +54,10 @@ rotor2 = Rotor(holder = rod2.get_endpoint_a())
 rotor3 = Rotor(holder = rod3.get_endpoint_a())
 rotor4 = Rotor(holder = rod4.get_endpoint_a())
 
-rod1.get_endpoint_a().set_rotor(rotor1)
-rod2.get_endpoint_a().set_rotor(rotor2)
-rod3.get_endpoint_a().set_rotor(rotor3)
-rod4.get_endpoint_a().set_rotor(rotor4)
+# rod1.get_endpoint_a().set_rotor(rotor1)
+# rod2.get_endpoint_a().set_rotor(rotor2)
+# rod3.get_endpoint_a().set_rotor(rotor3)
+# rod4.get_endpoint_a().set_rotor(rotor4)
 
 rotor1.set_thrust(10)
 rotor2.set_thrust(10)

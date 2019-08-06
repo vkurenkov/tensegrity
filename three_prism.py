@@ -2,7 +2,9 @@ import numpy         as np
 from math import cos, sin, pi
 import visualisation as rob_vis
 
-from model                   import Rod, RodState, Cable, TensegrityRobot, run_simulation
+from model                   import Rod, RodState, Cable, TensegrityRobot
+from simulation              import run_simulation
+
 from copy                    import deepcopy
 from scipy.spatial.transform import Rotation
 

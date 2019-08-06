@@ -1,5 +1,7 @@
 import numpy as np
 
+from copy import copy
+
 class Gravity:
     def __init__(self, rod, gravity=np.array([0, 0, -9.8])):
         self._gravity = gravity
@@ -7,3 +9,15 @@ class Gravity:
 
     def get_force(self):
         return self._rod.get_state().r, self._gravity * self._rod.get_mass()
+
+class Rotor:
+    def __init__(self, holder):
+        self._holder = holder
+        self._thrust = 0
+    def set_thrust(self, thrust):
+        self._thrust = thrust
+    def get_thrust(self):
+        return copy(self._thrust)
+    def get_vector(self):
+        #return np.array([[1], [0], [0]])
+        return np.array([0, 0, 1])

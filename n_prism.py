@@ -1,7 +1,7 @@
 import visualisation          as rob_vis
 import configurations.n_prism as n_prism
 
-from model          import  run_simulation
+from simulation          import  run_simulation
 
 # Build a robot
 robot = n_prism.build(n=7)
