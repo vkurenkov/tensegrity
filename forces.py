@@ -12,7 +12,7 @@ class Gravity:
         return np.array([0.0, 0.0, 0.0]), self._gravity * self._rod.get_mass()
 
 class Rotor:
-    def __init__(self, EndPoint, orientation=Rotation.from_euler('zyx', [0, 0, 0])):
+    def __init__(self, EndPoint, orientation=Rotation.from_euler('xyz', [0, 0, 0])):
         self._EndPoint = EndPoint
         self._thrust = 0
         self._orientation = orientation

@@ -7,8 +7,6 @@ from scipy.spatial.transform import Rotation
 from dataclasses             import dataclass
 from copy                    import copy, deepcopy
 
-gravity = np.array([0, 0, -9.8])
-#gravity = np.array([0, 0, 0])
 
 class TensegrityRobot:
     def __init__(self):
@@ -157,12 +155,6 @@ class Rod:
 
         return ddr, dw
 
-    def get_quaternion_jacobian(self, q):
-        G = np.array([[-q[1],  q[0],  q[3], q[2]],
-                      [-q[2], -q[3],  q[0], q[1]],
-                      [-q[3],  q[2], -q[1], q[0]]])
-        return G
-
     def get_kinetic_energy(self):
         state = self.get_state()
         E = state.dr.dot(state.dr) * self.get_mass() + state.w.dot(self.get_inertia().dot(state.w))
@@ -191,18 +183,6 @@ class Rod:
             state.q = ro * (state.q * ro.inv())
 
         return state
-
-class Rotor:
-    def __init__(self, holder):
-        self._holder = holder
-        self._thrust = 0
-    def set_thrust(self, thrust):
-        self._thrust = thrust
-    def get_thrust(self):
-        return copy(self._thrust)
-    def get_vector(self):
-        #return np.array([[1], [0], [0]])
-        return np.array([0, 0, 1])
 
 class EndPoint:
     def __init__(self, holder):
@@ -234,6 +214,10 @@ class EndPoint:
         if self.is_a():
             displacement *= -1
         return state.q.apply([displacement, 0, 0])
+    def get_vector_from_opposite_endpoint_to_me(self):
+        return self.get_vector_from_endpoint_to_me(self.get_opposite_endpoint())
+    def get_vector_from_endpoint_to_me(self, endpoint):
+        return self.get_position() - endpoint.get_position()
 
     def get_position(self, state=None):
         if state is None:

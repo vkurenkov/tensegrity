@@ -14,7 +14,7 @@ OFFSET = LENGTH/8.0
 UNSTRETCHED_LENGTH_v = 0.02
 UNSTRETCHED_LENGTH_h1 = 0.03
 UNSTRETCHED_LENGTH_h2 = 0.15
-STIFFNESS = 100
+STIFFNESS = 1000
 VISCOSITY = 1
 
 q0=Rotation.from_euler("xyz", [0, 90, 0], degrees=True)
@@ -77,6 +77,6 @@ hist_states = run_simulation(robot, time=0.5, dt=0.005)
 rob_vis.plot_cur_state(robot)
 
 rob_vis.plot_com_graphs(hist_states)
-#rob_vis.animate_historical_states(robot=robot, states=hist_states, interval=0.01)
+rob_vis.animate_historical_states(robot=robot, states=hist_states, interval=0.01)
 
 #print(hist_states)
