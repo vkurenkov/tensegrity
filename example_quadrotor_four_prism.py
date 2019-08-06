@@ -49,10 +49,15 @@ cab11  = Cable(end_point1=rod3.get_endpoint_a(), end_point2=rod4.get_endpoint_b(
 cab12  = Cable(end_point1=rod4.get_endpoint_a(), end_point2=rod1.get_endpoint_b(), stiffness=STIFFNESS, unstretched_length=UNSTRETCHED_LENGTH_v, viscosity=VISCOSITY)
 
 #######################
-rotor1 = Rotor(holder = rod1.get_endpoint_a())
-rotor2 = Rotor(holder = rod2.get_endpoint_a())
-rotor3 = Rotor(holder = rod3.get_endpoint_a())
-rotor4 = Rotor(holder = rod4.get_endpoint_a())
+rotor1 = Rotor(EndPoint = rod1.get_endpoint_a())
+rotor2 = Rotor(EndPoint = rod2.get_endpoint_a())
+rotor3 = Rotor(EndPoint = rod3.get_endpoint_a())
+rotor4 = Rotor(EndPoint = rod4.get_endpoint_a())
+
+rod1.add_force_source(rotor1)
+rod2.add_force_source(rotor2)
+rod3.add_force_source(rotor3)
+rod4.add_force_source(rotor4)
 
 # rod1.get_endpoint_a().set_rotor(rotor1)
 # rod2.get_endpoint_a().set_rotor(rotor2)
@@ -76,11 +81,11 @@ robot.add_cables([cab1, cab2, cab3, cab4, cab5, cab6, cab7, cab8, cab9, cab10, c
 
 rotors = [rotor1, rotor2, rotor3, rotor4]
 
-#rob_vis.plot_cur_state(robot)
-hist_states = run_simulation(robot, rotors, time=0.005, dt=0.005)
+rob_vis.plot_cur_state(robot)
+hist_states = run_simulation(robot, time=0.5, dt=0.005)
 rob_vis.plot_cur_state(robot)
 
-#rob_vis.plot_com_graphs(hist_states)
+rob_vis.plot_com_graphs(hist_states)
 #rob_vis.animate_historical_states(robot=robot, states=hist_states, interval=0.01)
 
 #print(hist_states)

@@ -11,8 +11,8 @@ class Gravity:
         return self._rod.get_state().r, self._gravity * self._rod.get_mass()
 
 class Rotor:
-    def __init__(self, holder):
-        self._holder = holder
+    def __init__(self, EndPoint):
+        self._EndPoint = EndPoint
         self._thrust = 0
     def set_thrust(self, thrust):
         self._thrust = thrust
@@ -21,3 +21,7 @@ class Rotor:
     def get_vector(self):
         #return np.array([[1], [0], [0]])
         return np.array([0, 0, 1])
+    def get_force(self):
+        F = self.get_vector() * self.get_thrust()
+        r = self._EndPoint.get_position()
+        return r, F
