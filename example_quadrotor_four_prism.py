@@ -4,18 +4,19 @@ import visualisation as rob_vis
 
 from model                   import Rod, RodState, Cable, TensegrityRobot
 from forces                  import Rotor
-from simulation              import run_simulation
+from simulation              import run_simulation_with_controller
+from control                 import QuadrotorController
 
 from copy                    import deepcopy
 from scipy.spatial.transform import Rotation
 
-LENGTH = 0.3
+LENGTH = 0.25
 OFFSET = LENGTH/8.0
 UNSTRETCHED_LENGTH_v = 0.02
 UNSTRETCHED_LENGTH_h1 = 0.03
 UNSTRETCHED_LENGTH_h2 = 0.15
-STIFFNESS = 1000
-VISCOSITY = 1
+STIFFNESS = 500
+VISCOSITY = 5
 
 q0=Rotation.from_euler("xyz", [0, 90, 0], degrees=True)
 
@@ -72,11 +73,14 @@ robot.add_cables([cab1, cab2, cab3, cab4, cab5, cab6, cab7, cab8, cab9, cab10, c
 
 rotors = [rotor1, rotor2, rotor3, rotor4]
 
+controller = QuadrotorController(rotors)
+
+
 rob_vis.plot_cur_state(robot)
-hist_states = run_simulation(robot, time=0.5, dt=0.005)
+hist_states = run_simulation_with_controller(robot, controller, time=0.5, dt=0.001)
 rob_vis.plot_cur_state(robot)
 
 rob_vis.plot_com_graphs(hist_states)
-rob_vis.animate_historical_states(robot=robot, states=hist_states, interval=0.01)
+# rob_vis.animate_historical_states(robot=robot, states=hist_states, interval=0.01)
 
 #print(hist_states)

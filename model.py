@@ -46,6 +46,20 @@ class TensegrityRobot:
 
         return K + P
 
+    def get_mass(self):
+        mass = 0
+        for rod in self.get_rods():
+            mass = mass + rod.get_mass()
+        return mass
+
+    def get_center_of_mass(self):
+        CoM = 0
+        mass = 0
+        for rod in self.get_rods():
+            CoM = CoM + rod.get_state().r * rod.get_mass()
+            mass = mass + rod.get_mass()
+        return CoM / mass
+
     def set_state(self, state):
         for ind, rod in enumerate(self.get_rods()):
             rod.get_state().r  = state["Rod{}_CoM".format(ind)]

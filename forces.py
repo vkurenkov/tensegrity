@@ -29,7 +29,9 @@ class Rotor:
         r = self._orientation.apply(r)
         r = self._EndPoint.get_rod().get_state().q.apply(r)
         return r
+    def get_application_point(self):
+        return self._EndPoint.get_position_relative_to_CoM()
+    def get_application_point_abs(self):
+        return self._EndPoint.get_position()
     def get_force(self):
-        F = self.get_vector() * self.get_thrust()
-        r = self._EndPoint.get_position_relative_to_CoM()
-        return r, F
+        return self.get_application_point(), self.get_vector() * self.get_thrust()

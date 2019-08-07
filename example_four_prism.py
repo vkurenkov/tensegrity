@@ -18,7 +18,7 @@ VISCOSITY = 1
 
 q0=Rotation.from_euler("xyz", [0, 90, 0], degrees=True)
 
-q1= Rotation.from_euler("xyz", [0, -30, 0], degrees=True) * q0
+q1= Rotation.from_euler("xyz", [0, 0, 0], degrees=True) * q0
 q2= Rotation.from_euler("xyz", [0, 0, 90], degrees=True) * q1
 q3= Rotation.from_euler("xyz", [0, 0, 90], degrees=True) * q2
 q4= Rotation.from_euler("xyz", [0, 0, 90], degrees=True) * q3
