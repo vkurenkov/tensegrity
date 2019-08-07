@@ -55,7 +55,7 @@ def plot_cur_state(robot, state=None):
     # Restore original states
     if state is not None:
         _pass_state(robot, original_state)
-def animate_historical_states(robot, states, interval=0.001):
+def animate_historical_states(robot, states, interval=0.001, blit=True):
     # Release previously allocated figures
     plt.close("all")
 
@@ -74,16 +74,14 @@ def animate_historical_states(robot, states, interval=0.001):
     
     def update(ind, states):
         num_hist_states = len(states[next(iter(states))])
-        if ind >= num_hist_states:
-            return
-        else:
-            #print("Current frame: {}".format(ind))
+        if ind < num_hist_states:
             data = _generate_one_frame_data(robot=robot, state=_the_same_dict_at(states, ind))
             for (points, line) in zip(data, lines):
                 line.set_data(points[0], points[1])
                 line.set_3d_properties(points[2])
+        return lines
 
-    _ = FuncAnimation(fig, func=update, fargs=([states]), interval=interval)
+    _ = FuncAnimation(fig, func=update, fargs=([states]), interval=interval, blit=blit)
     ax.set_xlim3d(-SCALE, SCALE)
     ax.set_ylim3d(-SCALE, SCALE)
     ax.set_zlim3d(-SCALE, SCALE)
