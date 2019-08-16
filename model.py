@@ -19,10 +19,8 @@ class TensegrityRobot:
         """
         states = []
         for rod in self.get_rods():
-            states.append(rod.update_taylor(dt=dt))
+            rod.update_taylor(dt=dt, apply_update=True)
 
-        for state, rod in zip(states, self.get_rods()):
-            rod.set_state(state)
     def enable_gravity(self, gravity=np.array([0, 0, -9.8])):
         for rod in self._rods:
             rod.add_force_source(Gravity(rod, gravity=gravity))
@@ -88,6 +86,7 @@ class RodState:
 
 class Rod:
     def __init__(self, mass, length, inertia, state, viscosity_dr=20, viscosity_w=20):
+        self._name       = []
         self._mass       = mass
         self._length     = length
         self._inertia    = inertia
@@ -146,8 +145,8 @@ class Rod:
             tot_torque += np.cross(pos, force)
 
         # TODO: Delete me somewhere in the not so distant future...
-        tot_force  += -state.dr * self._viscosity_dr
-        tot_torque += -state.w  * self._viscosity_w
+        tot_force  = tot_force -  state.dr * self._viscosity_dr
+        tot_torque = tot_torque - state.w  * self._viscosity_w
 
         return tot_force, tot_torque
 
@@ -164,7 +163,12 @@ class Rod:
         ddr           = force / self.get_mass()
 
         # Angular acceleration
-        dw = np.linalg.solve(self.get_inertia(), (torque - np.cross(state.w, self.get_inertia().dot(state.w))))
+        T = state.q.as_dcm()
+        I0 = self.get_inertia()
+
+        I = T.dot(I0.dot(np.transpose(T)))
+
+        dw = np.linalg.solve(I, torque)
         dw = dw.reshape((3,))
 
         return ddr, dw
@@ -178,24 +182,30 @@ class Rod:
     # Physics update
     def set_state(self, state):
         self._state = state
+    def set_name(self, name):
+        self._name = name
 
-    def update_taylor(self, state=None, dt=0.001):
+    def update_taylor(self, state=None, dt=0.001, apply_update=True):
         if state is None:
-            state = deepcopy(self.get_state())
+            state = self.get_state()
 
         ddr, dw  = self.get_dynamics(state)
         state.dr = state.dr + ddr * dt
         state.r  = state.r + state.dr * dt + 0.5*ddr*np.power(dt, 2)
+
         state.w  = state.w + dw*dt
 
         # Calculate new orientation
         v      = state.w * dt + 0.5*dw*np.power(dt, 2)
-        angle  = np.linalg.norm(v)
-        if not np.isclose(angle, 0.0):
-            axis    = v / angle
-            ro      = Rotation.from_rotvec(axis * angle)
-            state.q = ro * (state.q * ro.inv())
-
+        # angle  = np.linalg.norm(v)
+        if not np.isclose(0.0, np.linalg.norm(v)):
+            # axis    = v / angle
+            # print("angle", angle)
+            # print("axis", axis)
+            ro      = Rotation.from_rotvec(v)
+            state.q = ro * state.q
+        if apply_update:
+            self.set_state(state)
         return state
 
 class EndPoint:
