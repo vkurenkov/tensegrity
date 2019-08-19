@@ -1,6 +1,6 @@
 import numpy         as np
 
-from model                   import Rod, RodState, Cable, Rotor
+from model                   import Rod, RodState, Cable
 from control                 import controller
 
 from tqdm                    import tqdm

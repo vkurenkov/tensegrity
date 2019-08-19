@@ -10,8 +10,8 @@ DEFAULT_CONFIG = {
     "Length": 0.3,
     "Offset": 0.3 / 8.0,
     "UnstretchedLengthV": 0.2,
-    "UnstretchedLengthH1": 0.03,
-    "UnstretchedLengthH2": 0.15,
+    "UnstretchedLengthH1": 0.1,
+    "UnstretchedLengthH2": 0.1,
     "Stiffness": 10,
     "Viscosity": 1
 }
