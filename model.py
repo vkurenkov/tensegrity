@@ -19,7 +19,8 @@ class TensegrityRobot:
         """
         states = []
         for rod in self.get_rods():
-            rod.update_taylor(dt=dt, apply_update=True)
+            if not rod.is_fixed():
+                rod.update_taylor( dt=dt, apply_update=True )
 
     def enable_gravity(self, gravity=np.array([0, 0, -9.8])):
         for rod in self._rods:
@@ -43,6 +44,12 @@ class TensegrityRobot:
             P = P + cable.get_potential_energy()
 
         return K + P
+
+    def get_kinetic_energy(self):
+        K = 0
+        for rod in self.get_rods():
+            K = K + rod.get_kinetic_energy()
+        return K
 
     def get_mass(self):
         mass = 0
@@ -85,7 +92,7 @@ class RodState:
         self.dr = dr
 
 class Rod:
-    def __init__(self, mass, length, inertia, state, viscosity_dr=20, viscosity_w=20):
+    def __init__(self, mass, length, inertia, state, viscosity_dr=20, viscosity_w=20, fixed=False):
         self._name       = []
         self._mass       = mass
         self._length     = length
@@ -96,6 +103,7 @@ class Rod:
         self._endpoint_a = EndPoint(holder=self)
         self._endpoint_b = EndPoint(holder=self)
         self._force_sources = [self._endpoint_a, self._endpoint_b]
+        self._fixed = fixed
 
     # Topological properties
     def get_endpoint_a(self):
@@ -106,7 +114,8 @@ class Rod:
         cables = self.get_endpoint_a().get_cables()
         cables.extend(self.get_endpoint_b().get_cables())
         return cables
-    
+    def is_fixed(self):
+        return self._fixed
     # Geometrical properties
     def get_cables_states(self, state=None):
         """
@@ -308,9 +317,14 @@ class Cable:
         return self._stiffness
     def get_unstretched_length(self):
         return self._unstretched_length
+    def set_unstretched_length(self, l):
+        self._unstretched_length = l
+    def get_length(self):
+        d = self._end_points[ 0 ].get_position() - self._end_points[ 1 ].get_position()
+        return np.linalg.norm( d )
     def get_viscosity(self):
         return self._viscosity
+
     def get_potential_energy(self):
-        d = self._end_points[0].get_position() - self._end_points[1].get_position()
-        P = (np.linalg.norm(d) - self.get_unstretched_length())**2 * self.get_stiffness()
+        P = (self.get_length() - self.get_unstretched_length()) ** 2 * self.get_stiffness()
         return P
