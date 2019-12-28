@@ -7,24 +7,26 @@ from scipy.spatial.transform import Rotation
 from math                    import cos, sin, pi, radians
 
 DEFAULT_CONFIG = {
-    "Length": 0.3,
     "Offset": 0.3 / 8.0,
-    "UnstretchedLengthV": 0.2,
-    "UnstretchedLengthH1": 0.03,
-    "UnstretchedLengthH2": 0.15,
-    "Stiffness": 10,
-    "Viscosity": 1
+    "CableV_UnstretchedLength": 0.2,
+    "CableH1_UnstretchedLength": 0.03,
+    "CableH2_UnstretchedLength": 0.15,
+    "Cable_Stiffness": 10,
+    "Cable_Viscosity": 1,
+    "Rod_Length": 0.3,
+    "Rod_Mass":   1,
 }
 
 def build(n=4, config=DEFAULT_CONFIG):
     # Parse config
-    length       = config["Length"]
+    length       = config["Rod_Length"]
+    mass         = config["Rod_Mass"]
     offset_len   = config["Offset"]
-    unstr_len_v  = config["UnstretchedLengthV"]
-    unstr_len_h1 = config["UnstretchedLengthH1"]
-    unstr_len_h2 = config["UnstretchedLengthH2"]
-    stiffness    = config["Stiffness"]
-    viscosity    = config["Viscosity"]
+    unstr_len_v  = config["CableV_UnstretchedLength"]
+    unstr_len_h1 = config["CableH1_UnstretchedLength"]
+    unstr_len_h2 = config["CableH2_UnstretchedLength"]
+    stiffness    = config["Cable_Stiffness"]
+    viscosity    = config["Cable_Viscosity"]
 
     # Degree/radian of rotation for every rod
     rot_deg = 360 / n
@@ -33,13 +35,13 @@ def build(n=4, config=DEFAULT_CONFIG):
     # Configure the first rod
     rot     = Rotation.from_euler("xyz", [0, -30, 0], degrees=True) * Rotation.from_euler("xyz", [0, 90, 0], degrees=True)
     offset  = (offset_len*cos(pi/n), offset_len*sin(pi/n))
-    rods    = [Rod(mass=1, inertia=np.eye(3), length=length, state=RodState(r=np.array([offset[0], offset[1], 0]), q=rot))]
+    rods    = [Rod(mass=mass, inertia=np.eye(3), length=length, state=RodState(r=np.array([offset[0], offset[1], 0]), q=rot))]
 
     # Configure other rods with respect to the first rod
     for i in range(1, n):
         rot = Rotation.from_euler("xyz", [0, 0, rot_deg], degrees=True) * rot
         offset = (offset_len*cos(i*rot_rad+pi/n), offset_len*sin(i*rot_rad+pi/n))
-        rods.append(Rod(mass=1, inertia=np.eye(3), length=length, state=RodState(r=np.array([offset[0], offset[1], 0]), q=rot)))
+        rods.append(Rod(mass=mass, inertia=np.eye(3), length=length, state=RodState(r=np.array([offset[0], offset[1], 0]), q=rot)))
 
     # Attach the cables
     cabs = []

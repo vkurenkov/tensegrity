@@ -73,11 +73,21 @@ class TensegrityRobot:
             rod.get_state().w  = state["Rod{}_w".format(ind)]
     def get_state(self):
         state = {}
+
+        # Robot high-level state
+        state["CoM"] = self.get_center_of_mass()
+
+        # Rod states
         for ind, rod in enumerate(self.get_rods()):
             state["Rod{}_CoM".format(ind)] = rod.get_state().r
             state["Rod{}_Rot".format(ind)] = rod.get_state().q.as_quat()
             state["Rod{}_dr".format(ind)]  = rod.get_state().dr
             state["Rod{}_w".format(ind)]   = rod.get_state().w
+
+        # Cable states
+        for ind, cable in enumerate(self.get_cables()):
+            state["Cable{}_Potential".format(ind)] = cable.get_potential_energy()
+
         return state
 
 class RodState:
