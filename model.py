@@ -87,6 +87,7 @@ class TensegrityRobot:
         # Cable states
         for ind, cable in enumerate(self.get_cables()):
             state["Cable{}_Potential".format(ind)] = cable.get_potential_energy()
+            state["Cable{}_Length".format(ind)]    = cable.get_length()
 
         return state
 

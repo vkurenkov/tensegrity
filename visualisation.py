@@ -8,25 +8,6 @@ from collections          import defaultdict
 
 DEFAULT_SCALE = (0.2, 0.2, 0.2)
 
-def plot_pot_energy_over_time(states):
-    # Transform in a convenient format
-    energies = defaultdict(list)
-    for state in states:
-        for key in state:
-            if "Potential" in key:
-                energies[key].append(state[key])
-
-    # Plot all the energies
-    for key in energies:
-        plt.plot(np.arange(len(energies[key])), energies[key])
-
-    plt.show()
-
-def plot_cable_len_change_over_time(states, scale=DEFAULT_SCALE):
-    if len(states) <= 1:
-        raise Exception("No change is possible with this number of states.")
-    pass
-
 def plot_com_graphs(states, scale=DEFAULT_SCALE):
     fig, ax = _create_3d_subplot(title="Center of Mass over time")
     for key in states:
@@ -41,7 +22,7 @@ def plot_com_graphs(states, scale=DEFAULT_SCALE):
     ax.set_zlim3d(-scale[2], scale[2])
     plt.show()
 
-def plot_cur_state(robot, state=None, scale=DEFAULT_SCALE):
+def plot_cur_state(robot, state=None, scale=DEFAULT_SCALE, time=None):
     """
     Plots current state of the robot.
     You can pass states to be set for all the rods within the robot.
@@ -56,7 +37,7 @@ def plot_cur_state(robot, state=None, scale=DEFAULT_SCALE):
         original_state = _save_states(robot)
 
     # Plot current state
-    fig, ax = _create_3d_subplot(title="Visualisation of the given robot state.")
+    fig, ax = _create_3d_subplot(title="The robot at {}".format(time))
 
     lines = _generate_one_frame_data(robot=robot, state=state)
     for (ind, line) in enumerate(lines):

@@ -6,6 +6,7 @@ from collections             import defaultdict
 def run_simulation(robot, time, dt=0.001):
     n_iterations = int(time / dt)
     hist_states  = defaultdict(list)
+    states       = []
     for _ in tqdm(range(n_iterations)):
         # Update the robot
         ## controller(rotors)
@@ -13,10 +14,11 @@ def run_simulation(robot, time, dt=0.001):
 
         # Collect updated data
         rod_states = robot.get_state()
+        states.append(rod_states)
         for key in rod_states.keys():
             hist_states[key].append(rod_states[key])
 
-    return hist_states
+    return hist_states, states
 
 
 def run_simulation_with_controller(robot, controller, time, dt=0.001):
