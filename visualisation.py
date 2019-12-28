@@ -4,8 +4,28 @@ import numpy             as np
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 from copy                 import deepcopy
+from collections          import defaultdict
 
 DEFAULT_SCALE = (0.2, 0.2, 0.2)
+
+def plot_pot_energy_over_time(states):
+    # Transform in a convenient format
+    energies = defaultdict(list)
+    for state in states:
+        for key in state:
+            if "Potential" in key:
+                energies[key].append(state[key])
+
+    # Plot all the energies
+    for key in energies:
+        plt.plot(np.arange(len(energies[key])), energies[key])
+
+    plt.show()
+
+def plot_cable_len_change_over_time(states, scale=DEFAULT_SCALE):
+    if len(states) <= 1:
+        raise Exception("No change is possible with this number of states.")
+    pass
 
 def plot_com_graphs(states, scale=DEFAULT_SCALE):
     fig, ax = _create_3d_subplot(title="Center of Mass over time")
@@ -20,6 +40,7 @@ def plot_com_graphs(states, scale=DEFAULT_SCALE):
     ax.set_ylim3d(-scale[1], scale[1])
     ax.set_zlim3d(-scale[2], scale[2])
     plt.show()
+
 def plot_cur_state(robot, state=None, scale=DEFAULT_SCALE):
     """
     Plots current state of the robot.
@@ -55,6 +76,7 @@ def plot_cur_state(robot, state=None, scale=DEFAULT_SCALE):
     # Restore original states
     if state is not None:
         _pass_state(robot, original_state)
+
 def animate_historical_states(robot, states, interval=0.001, blit=True, scale=DEFAULT_SCALE):
     # Release previously allocated figures
     plt.close("all")
