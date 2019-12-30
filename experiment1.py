@@ -27,11 +27,11 @@ hist_states, states = run_simulation(robot, time=total_time, dt=dt)
 
 # Show some key frames
 rob_vis.plot_cur_state(robot, states[0], time=0.0)
-rob_vis.plot_cur_state(robot, states[int(0.4 / dt)], time=0.4)
+rob_vis.plot_cur_state(robot, states[int(0.2 / dt)], time=0.2)
 rob_vis.plot_cur_state(robot, states[int(0.8 / dt)], time=0.8)
-rob_vis.plot_cur_state(robot, states[int(1.2 / dt)], time=1.2)
 rob_vis.plot_cur_state(robot, states[int(1.6 / dt)], time=1.6)
-rob_vis.plot_cur_state(robot, states[int(2.0 / dt)], time=2.0)
+rob_vis.plot_cur_state(robot, states[int(3.2 / dt)], time=3.2)
+rob_vis.plot_cur_state(robot, states[int(4.9 / dt)], time=5.0)
 
 # Set up the style
 a = mplt.rcParams.keys()
@@ -77,8 +77,8 @@ plt.show()
 
 # Relative cable length change
 fig, ax = plt.subplots(nrows=3, ncols=3)
-zero_time  = [hist_states[key][0] for key in hist_states if "Length" in key]
-rel_change = [hist_states[key][1:] for key in hist_states if "Length" in key]
+zero_time  = [hist_states[key][0] for key in hist_states if "UnstretchedLength" in key]
+rel_change = [hist_states[key][1:] for key in hist_states if "_Length" in key]
 ind = 0
 for row in ax:
     for col in row:
