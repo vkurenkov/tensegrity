@@ -6,7 +6,7 @@ from matplotlib.animation import FuncAnimation
 from copy                 import deepcopy
 from collections          import defaultdict
 
-DEFAULT_SCALE = (0.2, 0.2, 0.2)
+DEFAULT_SCALE = (.6, .6, .6)
 
 def plot_com_graphs(states, scale=DEFAULT_SCALE):
     fig, ax = _create_3d_subplot(title="Center of Mass over time")
@@ -46,6 +46,11 @@ def plot_cur_state(robot, state=None, scale=DEFAULT_SCALE, time=None):
         if ind >= len(robot.get_rods()):
             c         = "black"
             linewidth = 0.5
+
+            # x = line[0][0] + (line[0][1] - line[0][0]) / 2
+            # y = line[1][0] + (line[1][1] - line[1][0]) / 2
+            # z = line[2][0] + (line[2][1] - line[2][0]) / 2
+            # ax.text(x,y,z, "Cable_{}".format(ind - len(robot.get_rods())))
 
         ax.plot(xs=line[0], ys=line[1], zs=line[2], c=c, linewidth=linewidth)
 

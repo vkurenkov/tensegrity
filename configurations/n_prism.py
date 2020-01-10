@@ -41,15 +41,22 @@ def build(n=4, config=DEFAULT_CONFIG):
     for i in range(1, n):
         rot = Rotation.from_euler("xyz", [0, 0, rot_deg], degrees=True) * rot
         offset = (offset_len*cos(i*rot_rad+pi/n), offset_len*sin(i*rot_rad+pi/n))
-        rods.append(Rod(mass=mass, inertia=np.eye(3), length=length, state=RodState(r=np.array([offset[0], offset[1], 0]), q=rot)))
+        z = 0.0
+        if i == 2:
+            z += 0.1
+        rods.append(Rod(mass=mass, inertia=np.eye(3), length=length, state=RodState(r=np.array([offset[0], offset[1], z]), q=rot)))
 
     # Attach the cables
     cabs = []
     for i in range(n):
         ind_to = (i + 1) % n
 
+        # Horizontal cables (the ones that are parallel to the xy-plane)
+        # Upper ones
         cabs.append(Cable(end_point1=rods[i].get_endpoint_a(), end_point2=rods[i-1].get_endpoint_a(),    stiffness=stiffness, unstretched_length=unstr_len_h1, viscosity=viscosity))
+        # Lower ones
         cabs.append(Cable(end_point1=rods[i].get_endpoint_b(), end_point2=rods[ind_to].get_endpoint_b(), stiffness=stiffness, unstretched_length=unstr_len_h2, viscosity=viscosity))
+        # Vertical cables (the ones that perpendicular to the xy-plane)
         cabs.append(Cable(end_point1=rods[i].get_endpoint_a(), end_point2=rods[ind_to].get_endpoint_b(), stiffness=stiffness, unstretched_length=unstr_len_v, viscosity=viscosity))
 
     # Build the robot

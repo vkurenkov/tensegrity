@@ -9,13 +9,13 @@ from simulation          import  run_simulation
 # Build a robot
 config = n_prism.DEFAULT_CONFIG.copy()
 config["Rod_Mass"] = 1.0
-config["Rod_Length"] = 0.3
+config["Rod_Length"] = 0.3 * 3
 config["Cable_Stiffness"] = 10
 config["Cable_Viscosity"] = 1
 config["CableV_UnstretchedLength"] = 0.2
 config["CableH1_UnstretchedLength"] = 0.2
 config["CableH2_UnstretchedLength"] = 0.2
-robot = n_prism.build(n=3)
+robot = n_prism.build(n=3, config=config)
 
 # Enable gravity
 #robot.enable_gravity()
@@ -24,6 +24,9 @@ robot = n_prism.build(n=3)
 total_time = 5.0
 dt         = 0.005
 hist_states, states = run_simulation(robot, time=total_time, dt=dt)
+
+# Show simulation
+# rob_vis.animate_historical_states(robot, hist_states)
 
 # Show some key frames
 rob_vis.plot_cur_state(robot, states[0], time=0.0)
@@ -83,6 +86,8 @@ ind = 0
 for row in ax:
     for col in row:
         col.plot(np.arange(dt, total_time, dt), np.array(rel_change[ind]) - zero_time[ind])
+        print("Cable {}".format(ind))
+        print((np.array(rel_change[ind]) - zero_time[ind])[-1])
         col.set_xlabel("t (in seconds)")
         col.set_ylabel("Cable {}".format(ind))
         ind += 1
